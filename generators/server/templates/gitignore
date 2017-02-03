@@ -3,6 +3,8 @@
 ######################<% if (!skipClient && useSass) { %>
 /<%= CLIENT_MAIN_SRC_DIR %>content/css/main.css<% } %>
 /<%= CLIENT_DIST_DIR %>**
+/<%= TEST_DIR %>javascript/coverage/
+/<%= TEST_DIR %>javascript/PhantomJS*/
 
 ######################
 # Node
@@ -10,6 +12,7 @@
 node/
 node_tmp/
 node_modules/
+npm-debug.log.*
 
 ######################
 # SASS

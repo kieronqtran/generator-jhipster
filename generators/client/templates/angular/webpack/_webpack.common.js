@@ -51,7 +51,7 @@ module.exports = function (options) {
                     test: /(vendor\.scss|global\.scss)/,
                     loaders: ['style-loader', 'css-loader', 'postcss-loader', 'sass-loader']
                 },
-                <%_ } else { _%>
+                <%_ } _%>
                 {
                     test: /\.css$/,
                     loaders: ['to-string-loader', 'css-loader'],
@@ -61,7 +61,6 @@ module.exports = function (options) {
                     test: /(vendor\.css|global\.css)/,
                     loaders: ['style-loader', 'css-loader']
                 },
-                <%_ } _%>
                 {
                     test: /\.(jpe?g|png|gif|svg|woff|woff2|ttf|eot)$/i,
                     loaders: [
@@ -102,10 +101,9 @@ module.exports = function (options) {
                 jQuery: "jquery"
             }),
             new HtmlWebpackPlugin({
-                template: './src/main/webapp/index.ejs',
+                template: './src/main/webapp/index.html',
                 chunksSortMode: 'dependency',
-                inject: 'body',
-                data: DATAS
+                inject: 'body'
             }),
             new AddAssetHtmlPlugin([
                 { filepath: path.resolve('./<%= BUILD_DIR %>www/vendor.dll.js'), includeSourcemap: false }

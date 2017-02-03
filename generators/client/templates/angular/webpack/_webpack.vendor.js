@@ -10,20 +10,19 @@ module.exports = {
             '@angular/http',
             '@angular/platform-browser',
             '@angular/platform-browser-dynamic',
-            '@angular/upgrade',
+            '@angular/router',
             '@ng-bootstrap/ng-bootstrap',
             'angular2-cookie',
             'angular2-infinite-scroll',
             'jquery',
             'ng-jhipster',
             'ng2-webstorage',
-            'rxjs',
             <%_ if (websocket == 'spring-websocket') { _%>
             'sockjs-client',
             'webstomp-client',
             <%_ } _%>
-            'ui-router-ng2'
-        ],
+            'rxjs'
+        ]
     },
     resolve: {
         extensions: ['.ts', '.js'],
@@ -49,18 +48,18 @@ module.exports = {
                     'file-loader?hash=sha512&digest=hex&name=[hash].[ext]',
                     'image-webpack-loader?bypassOnDebug&optimizationLevel=7&interlaced=false'
                 ]
-            },
+            }
         ]
     },
     output: {
         filename: '[name].dll.js',
         path: './<%= BUILD_DIR %>www',
-        library: '[name]',
+        library: '[name]'
     },
     plugins: [
         new webpack.DllPlugin({
             name: '[name]',
-            path: './<%= BUILD_DIR %>www/[name].json',
-        }),
+            path: './<%= BUILD_DIR %>www/[name].json'
+        })
     ]
 };

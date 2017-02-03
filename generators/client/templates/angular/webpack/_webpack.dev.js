@@ -19,8 +19,9 @@ module.exports = webpackMerge(commonConfig({env: ENV}), {
     devServer: {
         contentBase: './<%= BUILD_DIR %>www',
         proxy: [{
-            context: [<% if (authenticationType == 'oauth2') { %>
-                '/oauth',<% } %>
+            context: [<% if (authenticationType === 'oauth2') { %>
+                '/oauth',<% } %><% if (authenticationType === 'uaa') { %>
+                '/uaa',<% } %>
                 '/api',
                 '/management',
                 '/swagger-resources',
@@ -29,7 +30,13 @@ module.exports = webpackMerge(commonConfig({env: ENV}), {
             ],
             target: 'http://127.0.0.1:<%= serverPort %>',
             secure: false
-        }]
+        }<% if (websocket === 'spring-websocket') { %>,{
+            context: [
+                '/websocket'
+            ],
+            target: 'ws://127.0.0.1:<%= serverPort %>',
+            ws: true
+        }<% } %>]
     },
     output: {
         path: path.resolve('<%= BUILD_DIR %>www') ,
@@ -54,8 +61,11 @@ module.exports = webpackMerge(commonConfig({env: ENV}), {
             reload: false
         }),
         new ExtractTextPlugin('styles.css'),
-        new webpack.NoErrorsPlugin(),
+        new webpack.NoEmitOnErrorsPlugin(),
         new webpack.NamedModulesPlugin(),
-        new writeFilePlugin()
+        new writeFilePlugin(),
+        new webpack.WatchIgnorePlugin([
+            path.resolve('./src/test'),
+        ])
     ]
 });

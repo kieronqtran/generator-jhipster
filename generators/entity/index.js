@@ -131,6 +131,7 @@ module.exports = EntityGenerator.extend({
             this.skipClient = this.applicationType === 'microservice' || this.config.get('skipClient') || this.options['skip-client'];
 
             this.angularAppName = this.getAngularAppName();
+            this.angular2AppName = this.getAngular2AppName();
             this.jhipsterConfigDirectory = '.jhipster';
             this.mainClass = this.getMainClassName();
             this.microserviceAppName = '';
@@ -569,6 +570,15 @@ module.exports = EntityGenerator.extend({
 
                 if (_.isUndefined(relationship.otherEntityStateName)) {
                     relationship.otherEntityStateName = _.trim(_.kebabCase(relationship.otherEntityName), '-') + this.entityAngularJSSuffix;
+                }
+                if (_.isUndefined(relationship.otherEntityModuleName)) {
+                    if (relationship.otherEntityNameCapitalized !== 'User') {
+                        relationship.otherEntityModuleName = this.angular2AppName + relationship.otherEntityNameCapitalized + 'Module';
+                        relationship.otherEntityModulePath = _.kebabCase(_.lowerFirst(relationship.otherEntityName));
+                    } else {
+                        relationship.otherEntityModuleName = this.angular2AppName + 'SharedModule';
+                        relationship.otherEntityModulePath = '../shared';
+                    }
                 }
                 // Load in-memory data for root
                 if (relationship.relationshipType === 'many-to-many' && relationship.ownerSide) {

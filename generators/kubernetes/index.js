@@ -105,6 +105,7 @@ module.exports = KubernetesGenerator.extend({
             this.DOCKER_MYSQL = constants.DOCKER_MYSQL;
             this.DOCKER_MARIADB = constants.DOCKER_MARIADB;
             this.DOCKER_POSTGRESQL = constants.DOCKER_POSTGRESQL;
+            this.DOCKER_ORACLE = constants.DOCKER_ORACLE;
             this.DOCKER_MONGODB = constants.DOCKER_MONGODB;
             this.DOCKER_ELASTICSEARCH = constants.DOCKER_ELASTICSEARCH;
             this.DOCKER_KAFKA = constants.DOCKER_KAFKA;
@@ -244,7 +245,7 @@ module.exports = KubernetesGenerator.extend({
         }
 
         this.log('\nYou can deploy all your apps by running: ');
-        if (this.gatewayNb >= 1) {
+        if (this.gatewayNb >= 1 || this.microserviceNb >= 1) {
             this.log('  ' + chalk.cyan('kubectl apply -f registry'));
         }
         for (i = 0; i < this.appsFolders.length; i++) {

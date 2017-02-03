@@ -1,17 +1,18 @@
-import {ComponentFixture, TestBed, async} from '@angular/core/testing';
-import {MockBackend} from '@angular/http/testing';
-import {Http, BaseRequestOptions} from '@angular/http';
-import {<%=jhiPrefixCapitalized%>HealthCheckComponent} from '../../../../../../main/webapp/app/admin/health/health.component';
-import {<%=jhiPrefixCapitalized%>HealthService} from '../../../../../../main/webapp/app/admin/health/health.service';
-import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
-import {<%=jhiPrefixCapitalized%>TranslateComponent} from 'ng-jhipster'
+import { ComponentFixture, TestBed, async } from '@angular/core/testing';
+import { MockBackend } from '@angular/http/testing';
+import { Http, BaseRequestOptions } from '@angular/http';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 <%_ if (enableTranslation) { _%>
-import {TranslatePipe} from 'ng2-translate';
+import { JhiLanguageService } from 'ng-jhipster';
+import { MockLanguageService } from '../../../helpers/mock-language.service';
 <%_ } _%>
+import { <%=jhiPrefixCapitalized%>HealthCheckComponent } from '../../../../../../main/webapp/app/admin/health/health.component';
+import { <%=jhiPrefixCapitalized%>HealthService } from '../../../../../../main/webapp/app/admin/health/health.service';
 
-describe('Controller Tests', () => {
 
-    describe('<%=jhiPrefixCapitalized%>HealthCheckController', () => {
+describe('Component Tests', () => {
+
+    describe('<%=jhiPrefixCapitalized%>HealthCheckComponent', () => {
 
         let comp: <%=jhiPrefixCapitalized%>HealthCheckComponent;
         let fixture: ComponentFixture<<%=jhiPrefixCapitalized%>HealthCheckComponent>;
@@ -19,7 +20,7 @@ describe('Controller Tests', () => {
 
         beforeEach(async(() => {
             TestBed.configureTestingModule({
-                declarations: [<%=jhiPrefixCapitalized%>HealthCheckComponent<%_ if (enableTranslation) { _%>, TranslatePipe<%_ } _%>],
+                declarations: [<%=jhiPrefixCapitalized%>HealthCheckComponent],
                 providers: [
                     MockBackend,
                     BaseRequestOptions,
@@ -31,15 +32,23 @@ describe('Controller Tests', () => {
                         deps: [MockBackend, BaseRequestOptions]
                     },
                     <%=jhiPrefixCapitalized%>HealthService,
+                    <%_ if (enableTranslation) { _%>
+                    {
+                        provide: JhiLanguageService,
+                        useClass: MockLanguageService
+                    },
+                    <%_ } _%>
                     {
                         provide: NgbModal,
                         useValue: null
                     }
                 ]
             })
-            .overrideComponent(<%=jhiPrefixCapitalized%>HealthCheckComponent, {set: {
-                template: ''
-            }})
+            .overrideComponent(<%=jhiPrefixCapitalized%>HealthCheckComponent, {
+                set: {
+                    template: ''
+                }
+            })
             .compileComponents();
         }));
 

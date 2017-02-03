@@ -53,6 +53,12 @@ module.exports = function (config) {
                         test: /\.async\.(html|css)$/,
                         loaders: ['file?name=[name].[hash].[ext]', 'extract']
                     },
+                    <%_ if (useSass) { _%>
+                    {
+                        test: /\.scss$/,
+                        loaders: ['to-string-loader', 'css-loader', 'sass-loader']
+                    },
+                    <%_ } _%>
                     {
                         test: /src\/main\/webapp\/.+\.ts$/,
                         enforce: 'post',
@@ -83,7 +89,7 @@ module.exports = function (config) {
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter
         reporters: ['dots', 'junit', 'progress', 'coverage', 'karma-remap-istanbul'],
 
-        // todo: fix me so I work!
+        <%_ // TODO fix me so I work! _%>
         junitReporter: {
             outputFile: '<%= BUILD_DIR %>test-results/karma/TESTS-results.xml'
         },

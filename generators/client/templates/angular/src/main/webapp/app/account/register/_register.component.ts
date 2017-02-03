@@ -21,13 +21,13 @@ export class RegisterComponent implements OnInit {
     modalRef: NgbModalRef;
 
     constructor(
-        <%_ if (enableTranslation) { _%>
         private languageService: JhiLanguageService,
-        <%_ } _%>
         private loginModalService: LoginModalService,
         private registerService: Register,
         private elementRef: ElementRef,
-        private renderer: Renderer) {
+        private renderer: Renderer
+    ) {
+        this.languageService.setLocations(['register']);
     }
 
     ngOnInit() {
@@ -52,13 +52,13 @@ export class RegisterComponent implements OnInit {
                 this.registerAccount.langKey = key;
                 this.registerService.save(this.registerAccount).subscribe(() => {
                     this.success = true;
-                }, this.processError);
+                }, (response) => this.processError(response));
             });
 <%_ } else { _%>
             this.registerAccount.langKey = 'en';
             this.registerService.save(this.registerAccount).subscribe(() => {
                 this.success = true;
-            }, this.processError);
+            }, (response) => this.processError(response));
 <%_ } _%>
         }
     }
@@ -68,11 +68,11 @@ export class RegisterComponent implements OnInit {
     }
 
     private processError(response) {
-        // TODO handle this.logout(); on error
+        <%_ // TODO handle this.logout(); on error _%>
         this.success = null;
-        if (response.status === 400 && response.data === 'login already in use') {
+        if (response.status === 400 && response._body === 'login already in use') {
             this.errorUserExists = 'ERROR';
-        } else if (response.status === 400 && response.data === 'e-mail address already in use') {
+        } else if (response.status === 400 && response._body === 'e-mail address already in use') {
             this.errorEmailExists = 'ERROR';
         } else {
             this.error = 'ERROR';

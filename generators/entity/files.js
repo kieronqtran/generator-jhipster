@@ -232,8 +232,16 @@ const angularFiles = {
                     renameTo: generator => `entities/${generator.entityFolderName}/${generator.entityFileName}-delete-dialog.component.html`
                 },
                 {
-                    file: 'entities/_entity-management.state.ts',
-                    renameTo: generator => `entities/${generator.entityFolderName}/${generator.entityFileName}.state.ts`
+                    file: 'entities/_index.ts',
+                    renameTo: generator => `entities/${generator.entityFolderName}/index.ts`
+                },
+                {
+                    file: 'entities/_entity-management.module.ts',
+                    renameTo: generator => `entities/${generator.entityFolderName}/${generator.entityFileName}.module.ts`
+                },
+                {
+                    file: 'entities/_entity-management.route.ts',
+                    renameTo: generator => `entities/${generator.entityFolderName}/${generator.entityFileName}.route.ts`
                 },
                 {
                     file: 'entities/_entity.model.ts',
@@ -258,19 +266,23 @@ const angularFiles = {
                 {
                     file: 'entities/_entity.service.ts',
                     renameTo: generator => `entities/${generator.entityFolderName}/${generator.entityServiceFileName}.service.ts`
+                },
+                {
+                    file: 'entities/_entity-popup.service.ts',
+                    renameTo: generator => `entities/${generator.entityFolderName}/${generator.entityServiceFileName}-popup.service.ts`
                 }
 
             ]
         }
     ],
     test: [
-        /*{ // TODO enable once test these files are migrated
+        {
             path: CLIENT_TEST_SRC_DIR,
             templates: [{
-                file: 'spec/app/entities/_entity-management-detail.controller.spec.js',
-                renameTo: generator => `spec/app/entities/${generator.entityFolderName}/${generator.entityFileName}-detail.controller.spec.js`
+                file: 'spec/app/entities/_entity-management-detail.component.spec.ts',
+                renameTo: generator => `spec/app/entities/${generator.entityFolderName}/${generator.entityFileName}-detail.component.spec.ts`
             }]
-        },*/
+        },
         {
             condition: generator => generator.protractorTests,
             path: CLIENT_TEST_SRC_DIR,
@@ -357,10 +369,10 @@ function writeFiles() {
             } else {
                 // write client side files for angular 2.x +
                 this.writeFilesToDisk(angularFiles, this, false, CLIENT_NG2_TEMPLATES_DIR);
-                this.addEntityToModule(this.entityInstance, this.entityClass, this.entityAngularJSName, this.entityFolderName, this.entityFileName, this.enableTranslation);
+                this.addEntityToModule(this.entityInstance, this.entityClass, this.entityAngularJSName, this.entityFolderName, this.entityFileName, this.enableTranslation, this.clientFramework);
             }
 
-            this.addEntityToMenu(this.entityStateName, this.enableTranslation);
+            this.addEntityToMenu(this.entityStateName, this.enableTranslation, this.clientFramework);
 
             // Copy for each
             if (this.enableTranslation) {

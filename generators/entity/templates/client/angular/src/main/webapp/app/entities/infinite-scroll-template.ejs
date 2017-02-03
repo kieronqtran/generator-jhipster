@@ -1,5 +1,15 @@
-<%= entityInstancePlural %>: <%= entityClass %>[];
+<%_
+var i18nToLoad = [entityInstance];
+for (var idx in fields) {
+    if (fields[idx].fieldIsEnum == true) {
+        i18nToLoad.push(fields[idx].enumInstance);
+    }
+}
+_%>
+
+    <%= entityInstancePlural %>: <%= entityClass %>[];
     currentAccount: any;
+    eventSubscriber: Subscription;
     itemsPerPage: number;
     links: any;
     page: any;
@@ -7,15 +17,14 @@
     queryCount: any;
     reverse: any;
     totalItems: number;
-    <%_ if (searchEngine == 'elasticsearch') { _%>
+    <%_ if (searchEngine === 'elasticsearch') { _%>
     currentSearch: string;
-    <%_ } _%>
-    <%_ if (fieldsContainBlob) { _%>
-    byteSize: number;
-    openFile: any;
     <%_ } _%>
 
     constructor(
+        <%_ if (enableTranslation) { _%>
+        private jhiLanguageService: JhiLanguageService,
+        <%_ } _%>
         private <%= entityInstance %>Service: <%= entityClass %>Service,
         private alertService: AlertService,
         <%_ if (fieldsContainBlob) { _%>
@@ -23,6 +32,9 @@
         <%_ } _%>
         private eventManager: EventManager,
         private parseLinks: ParseLinks,
+        <%_ if (searchEngine === 'elasticsearch') { _%>
+        private activatedRoute: ActivatedRoute,
+        <%_ } _%>
         private principal: Principal
     ) {
         this.<%= entityInstancePlural %> = [];
@@ -33,23 +45,16 @@
         };
         this.predicate = 'id';
         this.reverse = true;
-        <%_ if (fieldsContainBlob) { _%>
-        this.openFile = dataUtils.openFile;
-        this.byteSize = dataUtils.byteSize;
+        <%_ if (searchEngine === 'elasticsearch') { _%>
+        this.currentSearch = activatedRoute.snapshot.params['search'] ? activatedRoute.snapshot.params['search'] : '';
+        <%_ } _%>
+        <%_ if (enableTranslation) { _%>
+        this.jhiLanguageService.setLocations(<%- toArrayString(i18nToLoad) %>);
         <%_ } _%>
     }
 
     loadAll () {
-    <%_ if (searchEngine != 'elasticsearch') { _%>
-        this.<%= entityInstance %>Service.query({
-            page: this.page,
-            size: this.itemsPerPage,
-            sort: this.sort()
-        }).subscribe(
-            (res: Response) => this.onSuccess(res.json(), res.headers),
-            (res: Response) => this.onError(res.json())
-        );
-    <%_ } else { _%>
+    <%_ if (searchEngine === 'elasticsearch') { _%>
         if (this.currentSearch) {
             this.<%= entityInstance %>Service.search({
                 query: this.currentSearch,
@@ -60,17 +65,17 @@
                 (res: Response) => this.onSuccess(res.json(), res.headers),
                 (res: Response) => this.onError(res.json())
             );
-        } else {
-            this.<%= entityInstance %>Service.query({
-                page: this.page,
-                size: this.itemsPerPage,
-                sort: this.sort()
-            }).subscribe(
-                (res: Response) => this.onSuccess(res.json(), res.headers),
-                (res: Response) => this.onError(res.json())
-            );
+            return;
         }
     <%_ } _%>
+        this.<%= entityInstance %>Service.query({
+            page: this.page,
+            size: this.itemsPerPage,
+            sort: this.sort()
+        }).subscribe(
+            (res: Response) => this.onSuccess(res.json(), res.headers),
+            (res: Response) => this.onError(res.json())
+        );
     }
 
     reset () {
@@ -83,7 +88,7 @@
         this.page = page;
         this.loadAll();
     }
-    <%_ if (searchEngine == 'elasticsearch') { _%>
+    <%_ if (searchEngine === 'elasticsearch') { _%>
 
     clear () {
         this.<%= entityInstancePlural %> = [];
@@ -93,12 +98,12 @@
         this.page = 0;
         this.predicate = 'id';
         this.reverse = true;
-        this.currentSearch = null;
+        this.currentSearch = '';
         this.loadAll();
     }
 
-    search (searchQuery) {
-        if (!searchQuery) {
+    search (query) {
+        if (!query) {
             return this.clear();
         }
         this.<%= entityInstancePlural %> = [];
@@ -108,21 +113,7 @@
         this.page = 0;
         this.predicate = '_score';
         this.reverse = false;
-        this.currentSearch = searchQuery;
+        this.currentSearch = query;
         this.loadAll();
     }
     <%_ } _%>
-
-    private onSuccess(data, headers) {
-        this.links = this.parseLinks.parse(headers.get('link'));
-        this.totalItems = headers.get('X-Total-Count');
-        for (let i = 0; i < data.length; i++) {
-            this.<%= entityInstancePlural %>.push(data[i]);
-        }
-    }
-
-    registerChangeIn<%= entityClassPlural %>() {
-        this.eventManager.subscribe('<%= entityInstance %>ListModification', (response) => {
-            this.reset();
-        });
-    }

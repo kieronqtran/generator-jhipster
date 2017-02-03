@@ -61,6 +61,9 @@ function writeFiles() {
             if (this.prodDatabaseType === 'mssql') {
                 this.template(DOCKER_DIR + '_mssql.yml', DOCKER_DIR + 'mssql.yml', this, {});
             }
+            if (this.prodDatabaseType === 'oracle') {
+                this.template(DOCKER_DIR + '_oracle.yml', DOCKER_DIR + 'oracle.yml', this, {});
+            }
             if (this.applicationType === 'gateway' || this.prodDatabaseType === 'cassandra') {
                 // docker-compose files
                 this.template(DOCKER_DIR + '_cassandra.yml', DOCKER_DIR + 'cassandra.yml', this, {});
@@ -354,7 +357,7 @@ function writeFiles() {
                 this.template(SERVER_MAIN_SRC_DIR + 'package/config/cassandra/_package-info.java', javaDir + 'config/cassandra/package-info.java', this, {});
             }
             if (this.searchEngine === 'elasticsearch') {
-                this.template(SERVER_MAIN_SRC_DIR + 'package/config/_ElasticSearchConfiguration.java', javaDir + 'config/ElasticSearchConfiguration.java', this, {});
+                this.template(SERVER_MAIN_SRC_DIR + 'package/config/_ElasticsearchConfiguration.java', javaDir + 'config/ElasticsearchConfiguration.java', this, {});
             }
             if (this.messageBroker === 'kafka') {
                 this.template(SERVER_MAIN_SRC_DIR + 'package/config/_MessagingConfiguration.java', javaDir + 'config/MessagingConfiguration.java', this, {});
@@ -477,7 +480,7 @@ function writeFiles() {
                 mkdirp(TEST_DIR + 'features/');
             }
 
-            // Create ElasticSearch test files
+            // Create Elasticsearch test files
             if (this.searchEngine === 'elasticsearch') {
                 this.template(SERVER_TEST_SRC_DIR + 'package/config/elasticsearch/_IndexReinitializer.java', testDir + 'config/elasticsearch/IndexReinitializer.java', this, {});
             }

@@ -1,6 +1,6 @@
 import { Component, OnInit, Inject, LOCALE_ID } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { ParseLinks } from 'ng-jhipster';
+import { ParseLinks, JhiLanguageService} from 'ng-jhipster';
 
 import { Audit } from './audit.model';
 import { AuditsService } from './audits.service';
@@ -24,23 +24,26 @@ export class AuditsComponent implements OnInit {
     datePipe: DatePipe;
 
     constructor(
+        private jhiLanguageService: JhiLanguageService,
         private auditsService: AuditsService,
         private parseLinks: ParseLinks,
         @Inject(LOCALE_ID) private locale: string,
         private paginationConfig: PaginationConfig
     ) {
+        this.jhiLanguageService.setLocations(['audits']);
         this.itemsPerPage = ITEMS_PER_PAGE;
         this.page = 1;
         this.reverse = false;
         this.orderProp = 'timestamp';
-        this.datePipe =  new DatePipe(this.locale); // TODO see if there is a better way to inject pipes
+        <%_ // TODO see if there is a better way to inject pipes _%>
+        this.datePipe =  new DatePipe(this.locale);
     }
 
-    getAudits () {
+    getAudits() {
         return this.sortAudits(this.audits);
     }
 
-    loadPage (page: number) {
+    loadPage(page: number) {
         this.page = page;
         this.onChangeDate();
     }
@@ -51,7 +54,7 @@ export class AuditsComponent implements OnInit {
         this.onChangeDate();
     }
 
-    onChangeDate () {
+    onChangeDate() {
         this.auditsService.query({page: this.page - 1, size: this.itemsPerPage,
             fromDate: this.fromDate, toDate: this.toDate}).subscribe(res => {
 
@@ -61,7 +64,7 @@ export class AuditsComponent implements OnInit {
         });
     }
 
-    previousMonth () {
+    previousMonth() {
         let dateFormat = 'yyyy-MM-dd';
         let fromDate: Date = new Date();
 
@@ -74,7 +77,7 @@ export class AuditsComponent implements OnInit {
         this.fromDate = this.datePipe.transform(fromDate, dateFormat);
     }
 
-    today () {
+    today() {
         let dateFormat = 'yyyy-MM-dd';
         // Today + 1 day - needed if the current day must be included
         let today: Date = new Date();

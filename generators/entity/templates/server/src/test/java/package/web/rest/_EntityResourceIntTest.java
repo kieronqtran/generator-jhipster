@@ -69,7 +69,7 @@ public class <%= entityClass %>ResourceIntTest <% if (databaseType == 'cassandra
     try {
         oldSource = this.fs.readFileSync(this.SERVER_TEST_SRC_DIR + packageFolder + '/web/rest/' + entityClass + 'ResourceIntTest.java', 'utf8');
     } catch (e) {}
-_%>                    
+_%>
     <%_ for (idx in fields) {
     var defaultValueName = 'DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase();
     var updatedValueName = 'UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase();
@@ -336,7 +336,7 @@ _%>
         assertThat(test<%= entityClass %>.get<%=fields[idx].fieldInJavaBeanMethod%>()).isEqualTo(<%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
         <%_ }} if (searchEngine == 'elasticsearch') { _%>
 
-        // Validate the <%= entityClass %> in ElasticSearch
+        // Validate the <%= entityClass %> in Elasticsearch
         <%= entityClass %> <%= entityInstance %>Es = <%= entityInstance %>SearchRepository.findOne(test<%= entityClass %>.getId());
         assertThat(<%= entityInstance %>Es).isEqualToComparingFieldByField(test<%= entityClass %>);
         <%_ } _%>
@@ -486,7 +486,7 @@ _%>
         assertThat(test<%= entityClass %>.get<%=fields[idx].fieldInJavaBeanMethod%>()).isEqualTo(<%='UPDATED_' + fields[idx].fieldNameUnderscored.toUpperCase()%>);
         <%_ } } if (searchEngine == 'elasticsearch') { _%>
 
-        // Validate the <%= entityClass %> in ElasticSearch
+        // Validate the <%= entityClass %> in Elasticsearch
         <%= entityClass %> <%= entityInstance %>Es = <%= entityInstance %>SearchRepository.findOne(test<%= entityClass %>.getId());
         assertThat(<%= entityInstance %>Es).isEqualToComparingFieldByField(test<%= entityClass %>);
         <%_ } _%>
@@ -529,7 +529,7 @@ _%>
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk());<% if (searchEngine == 'elasticsearch') { %>
 
-        // Validate ElasticSearch is empty
+        // Validate Elasticsearch is empty
         boolean <%= entityInstance %>ExistsInEs = <%= entityInstance %>SearchRepository.exists(<%= entityInstance %>.getId());
         assertThat(<%= entityInstance %>ExistsInEs).isFalse();<% } %>
 
@@ -561,4 +561,9 @@ _%>
             <%_ } _%>
             .andExpect(jsonPath("$.[*].<%=fields[idx].fieldName%>").value(hasItem(<% if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { %>Base64Utils.encodeToString(<% } else if (fields[idx].fieldType == 'ZonedDateTime') { %>sameInstant(<% } %><%='DEFAULT_' + fields[idx].fieldNameUnderscored.toUpperCase()%><% if ((fields[idx].fieldType == 'byte[]' || fields[idx].fieldType === 'ByteBuffer') && fields[idx].fieldTypeBlobContent != 'text') { %><% if (databaseType === 'cassandra') { %>.array()<% } %>)<% } else if (fields[idx].fieldType == 'Integer') { %><% } else if (fields[idx].fieldType == 'Long') { %>.intValue()<% } else if (fields[idx].fieldType == 'Float' || fields[idx].fieldType == 'Double') { %>.doubleValue()<% } else if (fields[idx].fieldType == 'BigDecimal') { %>.intValue()<% } else if (fields[idx].fieldType == 'Boolean') { %>.booleanValue()<% } else if (fields[idx].fieldType == 'ZonedDateTime') { %>)<% } else { %>.toString()<% } %>)))<% } %>;
     }<% } %>
+
+    @Test
+    public void equalsVerifier() throws Exception {
+        TestUtil.equalsVerifier(<%= entityClass %>.class);
+    }
 }

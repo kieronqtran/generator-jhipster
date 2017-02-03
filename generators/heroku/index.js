@@ -39,11 +39,18 @@ module.exports = HerokuGenerator.extend({
         if (this.herokuAppName) {
             exec('heroku apps:info --json', function (err, stdout) {
                 if (err) {
+                    this.config.set('herokuAppName', null);
                     this.abort = true;
-                    this.log.error(err);
+                    this.log.error(`Could not find app: ${chalk.cyan(this.herokuAppName)}`);
+                    this.log.error('Run the generator again to create a new app.');
                 } else {
                     var json = JSON.parse(stdout);
                     this.herokuAppName = json['app']['name'];
+                    if (json['dynos'].length > 0) {
+                        this.dynoSize = json['dynos'][0]['size'];
+                    } else {
+                        this.dynoSize = 'Free';
+                    }
                     this.log(`Deploying as existing app: ${chalk.bold(this.herokuAppName)}`);
                     this.herokuAppExists = true;
                     this.config.set('herokuAppName', this.herokuAppName);
@@ -168,6 +175,7 @@ module.exports = HerokuGenerator.extend({
                                 herokuCreateCmd = 'heroku git:remote --app ' + this.herokuAppName;
                             } else {
                                 herokuCreateCmd = 'heroku create ' + regionParams;
+                                this.dynoSize = 'Free';
 
                                 // Extract from "Created random-app-name-1234... done"
                                 getHerokuAppName = function(def, stdout) { return stdout.substring(stdout.indexOf('https://') + 8, stdout.indexOf('.herokuapp')); };
@@ -224,7 +232,7 @@ module.exports = HerokuGenerator.extend({
             }
 
             this.log(chalk.bold('\nProvisioning addons'));
-            exec(`heroku addons:create ${dbAddOn}`, {}, function (err, stdout, stderr) {
+            exec(`heroku addons:create ${dbAddOn} --app ${this.herokuAppName}`, {}, function (err, stdout, stderr) {
                 if (err) {
                     this.log('No new addons created');
                 } else {
@@ -277,10 +285,19 @@ module.exports = HerokuGenerator.extend({
             this.template('_bootstrap-heroku.yml', constants.SERVER_MAIN_RES_DIR + '/config/bootstrap-heroku.yml');
             this.template('_application-heroku.yml', constants.SERVER_MAIN_RES_DIR + '/config/application-heroku.yml');
             this.template('_Procfile', 'Procfile');
+            if (this.buildTool === 'gradle') {
+                this.template('_heroku.gradle', 'gradle/heroku.gradle');
+            }
 
             this.conflicter.resolve(function (err) {
                 done();
             });
+        },
+
+        addHerokuBuildPlugin: function () {
+            if (this.buildTool !== 'gradle') return;
+            this.addGradlePlugin('gradle.plugin.com.heroku.sdk', 'heroku-gradle', '0.2.0');
+            this.applyFromGradleScript('gradle/heroku');
         }
     },
 

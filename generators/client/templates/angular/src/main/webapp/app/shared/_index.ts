@@ -7,7 +7,7 @@ export * from './auth/account.service';
 export * from './auth/auth-oauth2.service';
 <%_ } else if (authenticationType === 'jwt' || authenticationType === 'uaa') { _%>
 export * from './auth/auth-jwt.service';
-<%_ } else { _%>
+<%_ } else if (authenticationType === 'session') { _%>
 export * from './auth/auth-session.service';
 <%_ } _%>
 export * from './auth/auth.service';
@@ -26,7 +26,11 @@ export * from './login/login.component';
 export * from './login/login.service';
 export * from './login/login-modal.service';
 export * from './constants/pagination.constants';
-export * from './model/account.model';
+export * from './user/account.model';
+<%_ if (!skipUserManagement) { _%>
+export * from './user/user.model';
+export * from './user/user.service';
+<%_ } _%>
 <%_ if (enableSocialSignIn) { _%>
 export * from './social/social.service';
 export * from './social/social.component';
@@ -34,3 +38,4 @@ export * from './social/social.component';
 export * from './shared-libs.module';
 export * from './shared-common.module';
 export * from './shared.module';
+export * from './auth/user-route-access-service';

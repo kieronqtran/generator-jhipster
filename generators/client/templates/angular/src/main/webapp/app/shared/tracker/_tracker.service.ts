@@ -1,16 +1,16 @@
 import { Injectable, Inject } from '@angular/core';
+import { Router, NavigationEnd } from '@angular/router';
 import { Observable, Observer, Subscription } from 'rxjs/Rx';
-import { UIRouter } from 'ui-router-ng2';
-<%_ if (authenticationType === 'oauth2') { _%>
-import { LocalStorageService } from 'ng2-webstorage';
-<%_ } _%>
 
 import { CSRFService } from '../auth/csrf.service';
 <%_ if (authenticationType === 'jwt' || authenticationType === 'uaa') { _%>
 import { AuthServerProvider } from '../auth/auth-jwt.service';
 <%_ } _%>
+<%_ if (authenticationType === 'oauth2') { _%>
+import { AuthServerProvider } from '../auth/auth-oauth2.service';
+<%_ } _%>
 
-// TODO find a better way to import these libs here
+<%_ // TODO find a better way to import these libs here _%>
 import SockJS = require('sockjs-client');
 import Stomp = require('webstomp-client');
 
@@ -26,11 +26,9 @@ export class <%=jhiPrefixCapitalized%>TrackerService {
     private subscription: Subscription;
 
     constructor(
-        private uiRouter: UIRouter,
-        <%_ if (authenticationType === 'jwt' || authenticationType === 'uaa') { _%>
+        private router: Router,
+        <%_ if (authenticationType === 'jwt' || authenticationType === 'uaa' || authenticationType === 'oauth2') { _%>
         private authServerProvider: AuthServerProvider,
-        <%_ } if (authenticationType === 'oauth2') { _%>
-        private $localStorage: LocalStorageService,
         <%_ } _%>
         private $document: Document,
         private $window: Window,
@@ -47,12 +45,8 @@ export class <%=jhiPrefixCapitalized%>TrackerService {
         // building absolute path so that websocket doesnt fail when deploying with a context path
         const loc = this.$window.location;
         let url = '//' + loc.host + loc.pathname + 'websocket/tracker';
-        <%_ if (authenticationType === 'oauth2') { _%>
-        /*jshint camelcase: false */
-        const authToken = this.$json.stringify(this.$localStorage.retrieve('authenticationToken')).access_token;
-        url += '?access_token=' + authToken;
-        <%_ } if (authenticationType === 'jwt' || authenticationType === 'uaa') { _%>
-        const authToken = this.authServerProvider.getToken();
+        <%_ if (authenticationType === 'jwt' || authenticationType === 'uaa' || authenticationType === 'oauth2') { _%>
+        const authToken = this.authServerProvider.getToken()<% if (authenticationType === 'oauth2') { %>.access_token<% } %>;
         if (authToken) {
             url += '?access_token=' + authToken;
         }
@@ -68,8 +62,10 @@ export class <%=jhiPrefixCapitalized%>TrackerService {
             this.connectedPromise = null;
             this.sendActivity();
             if (!this.alreadyConnectedOnce) {
-                this.subscription = this.uiRouter.globals.success$.subscribe((event) => {
-                  this.sendActivity();
+                this.subscription = this.router.events.subscribe((event) => {
+                  if (event instanceof NavigationEnd) {
+                    this.sendActivity();
+                  }
                 });
                 this.alreadyConnectedOnce = true;
             }
@@ -81,7 +77,7 @@ export class <%=jhiPrefixCapitalized%>TrackerService {
             this.stompClient.disconnect();
             this.stompClient = null;
         }
-        if (this.subscription !== null) {
+        if (this.subscription) {
             this.subscription.unsubscribe();
             this.subscription = null;
         }
@@ -96,7 +92,7 @@ export class <%=jhiPrefixCapitalized%>TrackerService {
         if (this.stompClient !== null && this.stompClient.connected) {
             this.stompClient.send(
                 '/topic/activity', // destination
-                JSON.stringify({'page': this.uiRouter.globals.current.name}), // body
+                JSON.stringify({'page': this.router.routerState.snapshot.url}), // body
                 {} // header
             );
         }

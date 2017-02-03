@@ -38,27 +38,40 @@ util.inherits(Generator, yeoman.Base);
  * @param {string} routerName - The name of the AngularJS router that is added to the menu.
  * @param {string} glyphiconName - The name of the Glyphicon (from Bootstrap) that will be displayed.
  * @param {boolean} enableTranslation - If translations are enabled or not
+ * @param {string} clientFramework - The name of the client framework
  */
-Generator.prototype.addElementToMenu = function (routerName, glyphiconName, enableTranslation) {
+Generator.prototype.addElementToMenu = function (routerName, glyphiconName, enableTranslation, clientFramework) {
     try {
         var navbarPath;
-        if (this.clientFramework === 'angular1') {
+        if (clientFramework === 'angular1') {
             navbarPath = CLIENT_MAIN_SRC_DIR + 'app/layouts/navbar/navbar.html';
+            jhipsterUtils.rewriteFile({
+                file: navbarPath,
+                needle: 'jhipster-needle-add-element-to-menu',
+                splicable: [`<li ui-sref-active="active">
+                                <a ui-sref="${routerName}" ng-click="vm.collapseNavbar()">
+                                    <span class="glyphicon glyphicon-${glyphiconName}"></span>&nbsp;
+                                    <span ${enableTranslation ? 'data-translate="global.menu.' + routerName + '"' : ''}>${_.startCase(routerName)}</span>
+                                </a>
+                            </li>`
+                ]
+            }, this);
         } else {
             navbarPath = CLIENT_MAIN_SRC_DIR + 'app/layouts/navbar/navbar.component.html';
+            jhipsterUtils.rewriteFile({
+                file: navbarPath,
+                needle: 'jhipster-needle-add-element-to-menu',
+                splicable: [`<li routerLinkActive="active">
+                                <a routerLink="${routerName}" routerLinkActive="active" ng-click="vm.collapseNavbar()">
+                                    <span class="glyphicon glyphicon-${glyphiconName}"></span>&nbsp;
+                                    <span ${enableTranslation ? 'data-translate="global.menu.' + routerName + '"' : ''}>${_.startCase(routerName)}</span>
+                                </a>
+                            </li>`
+                ]
+            }, this);
         }
 
-        jhipsterUtils.rewriteFile({
-            file: navbarPath,
-            needle: 'jhipster-needle-add-element-to-menu',
-            splicable: [`<li ui-sref-active="active">
-                            <a ui-sref="${routerName}" ng-click="vm.collapseNavbar()">
-                                <span class="glyphicon glyphicon-${glyphiconName}"></span>&nbsp;
-                                <span ${enableTranslation ? 'data-translate="global.menu.' + routerName + '"' : ''}>${_.startCase(routerName)}</span>
-                            </a>
-                        </li>`
-            ]
-        }, this);
+
     } catch (e) {
         this.log(chalk.yellow('\nUnable to find ') + navbarPath + chalk.yellow(' or missing required jhipster-needle. Reference to ') + routerName + ' ' + chalk.yellow('not added to menu.\n'));
     }
@@ -70,11 +83,12 @@ Generator.prototype.addElementToMenu = function (routerName, glyphiconName, enab
  * @param {string} routerName - The name of the AngularJS router that is added to the admin menu.
  * @param {string} glyphiconName - The name of the Glyphicon (from Bootstrap) that will be displayed.
  * @param {boolean} enableTranslation - If translations are enabled or not
+ * @param {string} clientFramework - The name of the client framework
  */
-Generator.prototype.addElementToAdminMenu = function (routerName, glyphiconName, enableTranslation) {
+Generator.prototype.addElementToAdminMenu = function (routerName, glyphiconName, enableTranslation, clientFramework) {
     try {
         var navbarAdminPath;
-        if (this.clientFramework === 'angular1') {
+        if (clientFramework === 'angular1') {
             navbarAdminPath = CLIENT_MAIN_SRC_DIR + 'app/layouts/navbar/navbar.html';
         } else {
             navbarAdminPath = CLIENT_MAIN_SRC_DIR + 'app/layouts/navbar/navbar.component.html';
@@ -100,11 +114,12 @@ Generator.prototype.addElementToAdminMenu = function (routerName, glyphiconName,
  *
  * @param {string} routerName - The name of the AngularJS router (which by default is the name of the entity).
  * @param {boolean} enableTranslation - If translations are enabled or not
+ * @param {string} clientFramework - The name of the client framework
  */
-Generator.prototype.addEntityToMenu = function (routerName, enableTranslation) {
+Generator.prototype.addEntityToMenu = function (routerName, enableTranslation, clientFramework) {
     try {
         var entityMenuPath;
-        if (this.clientFramework === 'angular1') {
+        if (clientFramework === 'angular1') {
             entityMenuPath = CLIENT_MAIN_SRC_DIR + 'app/layouts/navbar/navbar.html';
             jhipsterUtils.rewriteFile({
                 file: entityMenuPath,
@@ -123,7 +138,7 @@ Generator.prototype.addEntityToMenu = function (routerName, enableTranslation) {
                 file: entityMenuPath,
                 needle: 'jhipster-needle-add-entity-to-menu',
                 splicable: [`<li uiSrefActive="active">
-                        <a class="dropdown-item" uiSref="${routerName}" (click)="collapseNavbar()">
+                        <a class="dropdown-item" routerLink="${routerName}" (click)="collapseNavbar()">
                             <i class="fa fa-fw fa-asterisk" aria-hidden="true"></i>
                             <span ${enableTranslation ? 'jhiTranslate="global.menu.entities.' + _.camelCase(routerName) + '"' : ''}>${_.startCase(routerName)}</span>
                         </a>
@@ -140,104 +155,37 @@ Generator.prototype.addEntityToMenu = function (routerName, enableTranslation) {
  *
  * @param {string} routerName - The name of the AngularJS router (which by default is the name of the entity).
  * @param {boolean} enableTranslation - If translations are enabled or not
+ * @param {string} clientFramework - The name of the client framework
  */
-Generator.prototype.addEntityToModule = function (entityInstance, entityClass, entityAngularJSName, entityFolderName, entityFileName, enableTranslation) {
+Generator.prototype.addEntityToModule = function (entityInstance, entityClass, entityAngularJSName, entityFolderName, entityFileName, enableTranslation, clientFramework) {
     try {
-        if (this.clientFramework === 'angular1') {
+        if (clientFramework === 'angular1') {
             return;
         }
-        var entityPath = CLIENT_MAIN_SRC_DIR + 'app/entities/entity.module.ts';
-        var indexPath = CLIENT_MAIN_SRC_DIR + 'app/entities/index.ts';
-        jhipsterUtils.rewriteFile({
-            file: indexPath,
-            needle: 'jhipster-needle-add-entity-to-index-export',
-            splicable: [
-                this.stripMargin(
-                    `|export * from './${entityFolderName}/${entityFileName}-dialog.component';
-                     |export * from './${entityFolderName}/${entityFileName}-delete-dialog.component';
-                     |export * from './${entityFolderName}/${entityFileName}-detail.component';
-                     |export * from './${entityFolderName}/${entityFileName}.component';
-                     |export * from './${entityFolderName}/${entityFileName}.state';`
-                )
-            ]
-        }, this);
-        jhipsterUtils.rewriteFile({
-            file: indexPath,
-            needle: 'jhipster-needle-add-entity-to-index-model-export',
-            splicable: [`export * from './${entityFolderName}/${entityFileName}.model';`
-            ]
-        }, this);
-        jhipsterUtils.rewriteFile({
-            file: indexPath,
-            needle: 'jhipster-needle-add-entity-to-index-service-export',
-            splicable: [`export * from './${entityFolderName}/${entityFileName}.service';`
-            ]
-        }, this);
+        var appName = this.getAngular2AppName();
+        var entityModulePath = CLIENT_MAIN_SRC_DIR + 'app/entities/entity.module.ts';
 
         jhipsterUtils.rewriteFile({
-            file: entityPath,
-            needle: 'jhipster-needle-add-entity-to-module-states',
+            file: entityModulePath,
+            needle: 'jhipster-needle-add-entity-module-import',
             splicable: [
                 this.stripMargin(
-                    `|${entityInstance}State,
-                     |    ${entityInstance}NewState,
-                     |    ${entityInstance}DetailState,
-                     |    ${entityInstance}EditState,
-                     |    ${entityInstance}DeleteState,`
+                    `|import \{ ${appName}${entityAngularJSName}Module \} from \'./${entityFolderName}/${entityFileName}.module\';`
                 )
             ]
         }, this);
 
         jhipsterUtils.rewriteFile({
-            file: entityPath,
-            needle: 'jhipster-needle-add-entity-to-module-entryComponents',
+            file: entityModulePath,
+            needle: 'jhipster-needle-add-entity-module',
             splicable: [
                 this.stripMargin(
-                    `|${entityAngularJSName}DialogComponent,
-                     |        ${entityAngularJSName}DeleteDialogComponent,`
-                )
-            ]
-        }, this);
-
-        jhipsterUtils.rewriteFile({
-            file: entityPath,
-            needle: 'jhipster-needle-add-entity-to-module-declarations',
-            splicable: [
-                this.stripMargin(
-                    `|${entityAngularJSName}Component,
-                     |        ${entityAngularJSName}DetailComponent,
-                     |        ${entityAngularJSName}DialogComponent,
-                     |        ${entityAngularJSName}DeleteDialogComponent,`
-                )
-            ]
-        }, this);
-
-        jhipsterUtils.rewriteFile({
-            file: entityPath,
-            needle: 'jhipster-needle-add-entity-to-module-providers',
-            splicable: [`${entityClass}Service,`]
-        }, this);
-
-        jhipsterUtils.rewriteFile({
-            file: entityPath,
-            needle: 'jhipster-needle-add-entity-to-module-import',
-            splicable: [
-                this.stripMargin(
-                    `|${entityClass}Service,
-                     |    ${entityAngularJSName}Component,
-                     |    ${entityAngularJSName}DetailComponent,
-                     |    ${entityAngularJSName}DialogComponent,
-                     |    ${entityAngularJSName}DeleteDialogComponent,
-                     |    ${entityInstance}State,
-                     |    ${entityInstance}DetailState,
-                     |    ${entityInstance}NewState,
-                     |    ${entityInstance}EditState,
-                     |    ${entityInstance}DeleteState,`
+                    `|${appName}${entityAngularJSName}Module,`
                 )
             ]
         }, this);
     } catch (e) {this.log(e);
-        this.log(chalk.yellow('\nUnable to find ') + indexPath + chalk.yellow(' or missing required jhipster-needle. Reference to ') + entityInstance+ entityClass+ entityFolderName+ entityFileName + ' ' + chalk.yellow('not added to menu.\n'));
+        this.log(chalk.yellow('\nUnable to find ') + entityModulePath + chalk.yellow(' or missing required jhipster-needle. Reference to ') + entityInstance+ entityClass+ entityFolderName+ entityFileName + ' ' + chalk.yellow('not added to ' + entityModulePath + '.\n'));
     }
 };
 
@@ -713,11 +661,12 @@ Generator.prototype.addColumnToLiquibaseEntityChangeset = function (filePath, co
  * @param {string} socialParameter - parameter to send to social connection ex: 'public_profile,email'
  * @param {string} buttonColor - color of the social button. ex: '#3b5998'
  * @param {string} buttonHoverColor - color of the social button when is hover. ex: '#2d4373'
+ * @param {string} clientFramework - The name of the client framework
  */
-Generator.prototype.addSocialButton = function (isUseSass, socialName, socialParameter, buttonColor, buttonHoverColor) {
+Generator.prototype.addSocialButton = function (isUseSass, socialName, socialParameter, buttonColor, buttonHoverColor, clientFramework) {
     var socialServicefullPath = CLIENT_MAIN_SRC_DIR + 'app/account/social/social.service.js';
     var loginfullPath, registerfullPath;
-    if (this.clientFramework === 'angular1') {
+    if (clientFramework === 'angular1') {
         loginfullPath = CLIENT_MAIN_SRC_DIR + 'app/account/login/login.html';
         registerfullPath = CLIENT_MAIN_SRC_DIR + 'app/account/register/register.html';
     } else {
@@ -1083,16 +1032,25 @@ Generator.prototype.copyTemplate = function (source, dest, action, generator, op
 
     var _this = generator || this;
     var _opt = opt || {};
-    var regex;
+    let regex;
     switch (action) {
     case 'stripHtml' :
-        regex = /( (data-t|jhiT)ranslate\="([a-zA-Z0-9\ \+\{\}\'](\.)?)+")|( translate(-v|V)alues\="\{([a-zA-Z]|\d|\:|\{|\}|\[|\]|\-|\'|\s|\.)*?\}")|( translate-compile)|( translate-value-max\="[0-9\{\}\(\)\|]*")/g;
-        //looks for something like data-translate="foo.bar.message" and translate-values="{foo: '{{ foo.bar }}'}"
+        regex= new RegExp([
+            /( (data-t|jhiT)ranslate\="([a-zA-Z0-9\ \+\{\}\'](\.)?)+")/,                    // data-translate or jhiTranslate
+            /( translate(-v|V)alues\="\{([a-zA-Z]|\d|\:|\{|\}|\[|\]|\-|\'|\s|\.)*?\}")/,    // translate-values or translateValues
+            /( translate-compile)/,                                                         // translate-compile
+            /( translate-value-max\="[0-9\{\}\(\)\|]*")/,                                   // translate-value-max
+        ].map(r => r.source).join('|'), 'g');
         jhipsterUtils.copyWebResource(source, dest, regex, 'html', _this, _opt, template);
         break;
     case 'stripJs' :
-        regex = /(\,[\s]*(resolve)\:[\s]*[\[]?[\{][\s]*(translatePartialLoader|token: 'translate')[\[]?[\'a-zA-Z0-9\$\,\(\)\{\.\<\%\=\-\>\;\s\:\[\]]*(\;[\s]*\}\][\s]*\}|\)[\s]*\}\]))|(import\s\{\s?[a-zA-Z0-9\=\<\>\%]*LanguageService\s?\}\sfrom\s[\"|\']ng-jhipster[\"|\']\;)/g;
-        //looks for something like translatePartialLoader: [*] or token: 'translate'
+        regex= new RegExp([
+            /(\,[\s]*(resolve)\:[\s]*[\{][\s]*(translatePartialLoader)[\'a-zA-Z0-9\$\,\(\)\{\.\<\%\=\-\>\;\s\:\[\]]*(\;[\s]*\}\][\s]*\}))/, // ng1 resolve block
+            /([\s]import\s\{\s?JhiLanguageService\s?\}\sfrom\s[\"|\']ng-jhipster[\"|\']\;)/,       // ng2 import jhiLanguageService
+            /(\,?\s?JhiLanguageService\,?\s?)/,                                                          // ng2 import jhiLanguageService
+            /(private\s[a-zA-Z0-9]*(L|l)anguageService\s?\:\s?JhiLanguageService\s?,*[\s]*)/,          // ng2 jhiLanguageService constructor argument
+            /(this\.[a-zA-Z0-9]*(L|l)anguageService\.setLocations\(\[[\'|\"][a-zA-Z0-9-_]*[\'|\"]\]\)\;[\s]*)/,// jhiLanguageService invocations
+        ].map(r => r.source).join('|'), 'g');
         jhipsterUtils.copyWebResource(source, dest, regex, 'js', _this, _opt, template);
         break;
     case 'copy' :
@@ -1546,6 +1504,13 @@ Generator.prototype.getAngularAppName = function () {
 };
 
 /**
+ * get the angular 2 app name for the app.
+ */
+Generator.prototype.getAngular2AppName = function () {
+    return _.upperFirst(_.camelCase(this.baseName, true));
+};
+
+/**
  * get the java main class name.
  */
 Generator.prototype.getMainClassName = function () {
@@ -1775,7 +1740,6 @@ Generator.prototype.installI18nClientFilesByLanguage = function (_this, webappDi
     this.copyI18nFilesByName(_this, webappDir, 'register.json', lang);
     this.copyI18nFilesByName(_this, webappDir, 'sessions.json', lang);
     this.copyI18nFilesByName(_this, webappDir, 'settings.json', lang);
-    this.copyI18nFilesByName(_this, webappDir, 'reset.json', lang);
     this.copyI18nFilesByName(_this, webappDir, 'user-management.json', lang);
 
     // tracker.json for Websocket
@@ -1791,6 +1755,7 @@ Generator.prototype.installI18nClientFilesByLanguage = function (_this, webappDi
     _this.template(`${webappDir}i18n/${lang}/_activate.json`, `${webappDir}i18n/${lang}/activate.json`, this, {});
     _this.template(`${webappDir}i18n/${lang}/_global.json`, `${webappDir}i18n/${lang}/global.json`, this, {});
     _this.template(`${webappDir}i18n/${lang}/_health.json`, `${webappDir}i18n/${lang}/health.json`, this, {});
+    _this.template(`${webappDir}i18n/${lang}/_reset.json`, `${webappDir}i18n/${lang}/reset.json`, this, {});
 
 
 };
@@ -1836,6 +1801,28 @@ Generator.prototype.updateLanguagesInLanguageConstant = function (languages) {
         jhipsterUtils.replaceContent({
             file: fullPath,
             pattern: /\.constant.*LANGUAGES.*\[([^\]]*jhipster-needle-i18n-language-constant[^\]]*)\]/g,
+            content: content
+        }, this);
+    } catch (e) {
+        this.log(chalk.yellow('\nUnable to find ') + fullPath + chalk.yellow(' or missing required jhipster-needle. LANGUAGE constant not updated with languages: ') + languages + chalk.yellow(' since block was not found. Check if you have enabled translation support.\n'));
+    }
+};
+
+Generator.prototype.updateLanguagesInLanguageConstantNG2 = function (languages) {
+    var fullPath = CLIENT_MAIN_SRC_DIR + 'app/shared/language/language.constants.ts';
+    try {
+        var content = 'export const LANGUAGES: string[] = [\n';
+        for (var i = 0, len = languages.length; i < len; i++) {
+            var language = languages[i];
+            content += '    \'' + language + '\'' + (i !== languages.length - 1 ? ',' : '') + '\n';
+        }
+        content +=
+            '    // jhipster-needle-i18n-language-constant - JHipster will add/remove languages in this array\n' +
+            '];';
+
+        jhipsterUtils.replaceContent({
+            file: fullPath,
+            pattern: /export.*LANGUAGES.*\[([^\]]*jhipster-needle-i18n-language-constant[^\]]*)\];/g,
             content: content
         }, this);
     } catch (e) {

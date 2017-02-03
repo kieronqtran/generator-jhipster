@@ -1,7 +1,7 @@
 'use strict';
 
 // version of docker images
-const DOCKER_JHIPSTER_REGISTRY = 'jhipster/jhipster-registry:v2.5.7';
+const DOCKER_JHIPSTER_REGISTRY = 'jhipster/jhipster-registry:v2.5.8';
 const DOCKER_JAVA_JRE = 'openjdk:8-jre-alpine';
 const DOCKER_MYSQL = 'mysql:5.7.13'; // mysql.5.7.14+ doesn't work well with zoned date time, see https://github.com/jhipster/generator-jhipster/pull/4038
 const DOCKER_MARIADB = 'mariadb:10.1.17';
@@ -9,6 +9,7 @@ const DOCKER_POSTGRESQL = 'postgres:9.5.4';
 const DOCKER_MONGODB = 'mongo:3.2.10';
 const DOCKER_CASSANDRA = 'cassandra:3.9';
 const DOCKER_MSSQL = 'microsoft/mssql-server-linux:latest';
+const DOCKER_ORACLE = 'sath89/oracle-12c:latest';
 const DOCKER_ELASTICSEARCH = 'elasticsearch:2.4.1';
 const DOCKER_KAFKA = 'wurstmeister/kafka:0.10.0.1';
 const DOCKER_ZOOKEEPER = 'wurstmeister/zookeeper:3.4.6';
@@ -70,6 +71,7 @@ const constants = {
     DOCKER_MONGODB: DOCKER_MONGODB,
     DOCKER_CASSANDRA: DOCKER_CASSANDRA,
     DOCKER_MSSQL: DOCKER_MSSQL,
+    DOCKER_ORACLE: DOCKER_ORACLE,
     DOCKER_ELASTICSEARCH: DOCKER_ELASTICSEARCH,
     DOCKER_KAFKA: DOCKER_KAFKA,
     DOCKER_ZOOKEEPER: DOCKER_ZOOKEEPER,

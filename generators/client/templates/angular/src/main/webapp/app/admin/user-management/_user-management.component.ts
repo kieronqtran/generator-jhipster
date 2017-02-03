@@ -1,24 +1,23 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Response } from '@angular/http';
-import { StateService } from 'ui-router-ng2';
-import { EventManager, PaginationUtil, ParseLinks, AlertService } from 'ng-jhipster';
+import { ActivatedRoute, Router } from '@angular/router';
+import { EventManager, PaginationUtil, ParseLinks, AlertService, JhiLanguageService } from 'ng-jhipster';
 
-import { User } from './user.model';
-import { UserService } from './user.service';
-import { ITEMS_PER_PAGE, Principal } from '../../shared';
+import { ITEMS_PER_PAGE, Principal, User, UserService } from '../../shared';
 import { PaginationConfig } from '../../blocks/config/uib-pagination.config';
 
 @Component({
     selector: '<%=jhiPrefix%>-user-mgmt',
     templateUrl: './user-management.component.html'
 })
-export class UserMgmtComponent implements OnInit {
+export class UserMgmtComponent implements OnInit, OnDestroy {
 
     currentAccount: any;
     users: User[];
     error: any;
     success: any;
     <%_ if (databaseType !== 'cassandra') { _%>
+    routeData: any;
     links: any;
     totalItems: any;
     queryCount: any;
@@ -30,31 +29,42 @@ export class UserMgmtComponent implements OnInit {
     <%_ } _%>
 
     constructor(
+        private jhiLanguageService: JhiLanguageService,
         private userService: UserService,
         private parseLinks: ParseLinks,
         private alertService: AlertService,
         private principal: Principal,
-        private $state: StateService,
-        private eventManager: EventManager<%_ if (databaseType !== 'cassandra') { _%>,
+        private eventManager: EventManager,<%_ if (databaseType !== 'cassandra') { _%>
         private paginationUtil: PaginationUtil,
-        private paginationConfig: PaginationConfig
+        private paginationConfig: PaginationConfig,
         <%_ } _%>
+        private activatedRoute: ActivatedRoute,
+        private router: Router
     ) {
         <%_ if (databaseType !== 'cassandra') { _%>
         this.itemsPerPage = ITEMS_PER_PAGE;
-        this.page = paginationUtil.parsePage($state.params['page']);
-        this.previousPage = this.page;
-        this.reverse = paginationUtil.parseAscending($state.params['sort']);
-        this.predicate = paginationUtil.parsePredicate($state.params['sort']);
+        this.routeData = this.activatedRoute.data.subscribe(data => {
+            this.page = data['pagingParams'].page;
+            this.previousPage = data['pagingParams'].page;
+            this.reverse = data['pagingParams'].ascending;
+            this.predicate = data['pagingParams'].predicate;
+        });
         <%_ } _%>
+        this.jhiLanguageService.setLocations(['user-management']);
     }
 
     ngOnInit() {
-        this.loadAll();
         this.principal.identity().then((account) => {
             this.currentAccount = account;
+            this.loadAll();
+            this.registerChangeInUsers();
         });
-        this.registerChangeInUsers();
+    }
+
+    ngOnDestroy() {
+        <%_ if (databaseType !== 'cassandra') { _%>
+        this.routeData.unsubscribe();
+        <%_ } _%>
     }
 
     registerChangeInUsers() {
@@ -108,13 +118,16 @@ export class UserMgmtComponent implements OnInit {
     }
 
     transition () {
-        this.$state.transitionTo(this.$state.$current, {
-            page: this.page,
-            sort: this.predicate + ',' + (this.reverse ? 'asc' : 'desc')
+        this.router.navigate(['/user-management'], { queryParams:
+                {
+                    page: this.page,
+                    sort: this.predicate + ',' + (this.reverse ? 'asc' : 'desc')
+                }
         });
+        this.loadAll();
     }
-    <%_ } _%>
 
+    <%_ } _%>
     private onSuccess(data, headers) {
         // hide anonymous user from user management: it's a required user for Spring Security
         let hiddenUsersSize = 0;
@@ -132,7 +145,7 @@ export class UserMgmtComponent implements OnInit {
         this.users = data;
     }
 
-    private onError (error) {
+    private onError(error) {
         this.alertService.error(error.error, error.message, null);
     }
 }

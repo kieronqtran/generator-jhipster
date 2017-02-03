@@ -1,13 +1,28 @@
-import { Component, OnInit } from '@angular/core';
+<%_
+var i18nToLoad = [entityInstance];
+for (var idx in fields) {
+    if (fields[idx].fieldIsEnum == true) {
+        i18nToLoad.push(fields[idx].enumInstance);
+    }
+}
+_%>
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Response } from '@angular/http';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { EventManager, AlertService } from 'ng-jhipster';
+
+import { NgbActiveModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { EventManager, AlertService<% if (enableTranslation) { %>, JhiLanguageService<% } %><% if (fieldsContainBlob) { %>, DataUtils<% } %> } from 'ng-jhipster';
 
 import { <%= entityClass %> } from './<%= entityFileName %>.model';
+import { <%= entityClass %>PopupService } from './<%= entityFileName %>-popup.service';
 import { <%= entityClass %>Service } from './<%= entityFileName %>.service';
-<%- include('model-class-import-template.ejs'); -%>
-<%- include('service-class-import-template.ejs'); -%>
+<%_ for (var rel of differentRelationships) { _%>
+import { <%= rel.otherEntityNameCapitalized %>, <%= rel.otherEntityNameCapitalized %>Service } from '../<%= rel.otherEntityModulePath %>';
+<%_ } _%>
+<%_
 // TODO replace ng-file-upload dependency by an ng2 depedency
+// TODO Find a better way to format dates so that it works with NgbDatePicker
+_%>
 @Component({
     selector: '<%= jhiPrefix %>-<%= entityFileName %>-dialog',
     templateUrl: './<%= entityFileName %>-dialog.component.html'
@@ -38,7 +53,7 @@ export class <%= entityAngularJSName %>DialogComponent implements OnInit {
             query += "\n            } else {"
             query += "\n                this." + relationships[idx].otherEntityName + "Service.find(" + relationshipFieldName + (dto == 'no' ? ".id" : "Id") + ").subscribe((subRes: Response) => {"
             query += "\n                    this." + variableName + " = [subRes].concat(res.json());"
-            query += "\n                }, (res: Response) => this.onError(res.json()))"
+            query += "\n                }, (subRes: Response) => this.onError(subRes.json()));"
             query += "\n            }"
             query += "\n        }, (res: Response) => this.onError(res.json()));"
         } else {
@@ -56,11 +71,22 @@ export class <%= entityAngularJSName %>DialogComponent implements OnInit {
     <%_ } _%>
     constructor(
         public activeModal: NgbActiveModal,
+        <%_ if (enableTranslation) { _%>
+        private jhiLanguageService: JhiLanguageService,
+        <%_ } _%>
+        <%_ if (fieldsContainBlob) { _%>
+        private dataUtils: DataUtils,
+        <%_ } _%>
         private alertService: AlertService,
         private <%= entityInstance %>Service: <%= entityClass %>Service,<% for (idx in differentRelationships) {%>
         private <%= differentRelationships[idx].otherEntityName %>Service: <%= differentRelationships[idx].otherEntityNameCapitalized %>Service,<% } %>
-        private eventManager: EventManager
-    ) {}
+        private eventManager: EventManager,
+        private router: Router
+    ) {
+        <%_ if (enableTranslation) { _%>
+        this.jhiLanguageService.setLocations(<%- toArrayString(i18nToLoad) %>);
+        <%_ } _%>
+    }
 
     ngOnInit() {
         this.isSaving = false;
@@ -69,9 +95,31 @@ export class <%= entityAngularJSName %>DialogComponent implements OnInit {
         <%- queries[idx] %>
         <%_ } _%>
     }
+    <%_ if (fieldsContainBlob) { _%>
+    byteSize(field) {
+        return this.dataUtils.byteSize(field);
+    }
 
+    openFile(contentType, field) {
+        return this.dataUtils.openFile(contentType, field);
+    }
+
+    setFileData($event, <%= entityInstance %>, field, isImage) {
+        if ($event.target.files && $event.target.files[0]) {
+            let $file = $event.target.files[0];
+            if (isImage && !/^image\//.test($file.type)) {
+                return;
+            }
+            this.dataUtils.toBase64($file, (base64Data) => {
+                <%= entityInstance %>[field] = base64Data;
+                <%= entityInstance %>[`${field}ContentType`] = $file.type;
+            });
+        }
+    }
+   <%_ } _%>
     clear () {
         this.activeModal.dismiss('cancel');
+        this.router.navigate([{ outlets: { popup: null }}], { replaceUrl: true });
     }
 
     save () {
@@ -89,6 +137,7 @@ export class <%= entityAngularJSName %>DialogComponent implements OnInit {
         this.eventManager.broadcast({ name: '<%= entityInstance %>ListModification', content: 'OK'});
         this.isSaving = false;
         this.activeModal.dismiss(result);
+        this.router.navigate([{ outlets: { popup: null }}], { replaceUrl: true });
     }
 
     private onSaveError (error) {
@@ -101,15 +150,17 @@ export class <%= entityAngularJSName %>DialogComponent implements OnInit {
     }
     <%_
     var entitiesSeen = [];
-    for (idx in relationships) { _%>
-    <%  var otherEntityNameCapitalized = relationships[idx].otherEntityNameCapitalized;
-        if(entitiesSeen.indexOf(otherEntityNameCapitalized) == -1) { %>
+    for (idx in relationships) {
+        var otherEntityNameCapitalized = relationships[idx].otherEntityNameCapitalized;
+            if(entitiesSeen.indexOf(otherEntityNameCapitalized) == -1) {
+    _%>
+
     track<%- otherEntityNameCapitalized -%>ById(index: number, item: <%- relationships[idx].otherEntityNameCapitalized -%>) {
         return item.id;
     }
     <%_ entitiesSeen.push(otherEntityNameCapitalized); } } _%>
-
     <%_ if (hasManyToMany) { _%>
+
     getSelected(selectedVals: Array<any>, option: any) {
         if (selectedVals) {
             for (let i = 0; i < selectedVals.length; i++) {
@@ -121,4 +172,36 @@ export class <%= entityAngularJSName %>DialogComponent implements OnInit {
         return option;
     }
     <%_ } _%>
+}
+
+@Component({
+    selector: '<%= jhiPrefix %>-<%= entityFileName %>-popup',
+    template: ''
+})
+export class <%= entityAngularJSName %>PopupComponent implements OnInit, OnDestroy {
+
+    modalRef: NgbModalRef;
+    routeSub: any;
+
+    constructor (
+        private route: ActivatedRoute,
+        private <%= entityInstance %>PopupService: <%= entityClass %>PopupService
+    ) {}
+
+    ngOnInit() {
+        this.routeSub = this.route.params.subscribe(params => {
+            if ( params['id'] ) {
+                this.modalRef = this.<%= entityInstance %>PopupService
+                    .open(<%= entityAngularJSName %>DialogComponent, params['id']);
+            } else {
+                this.modalRef = this.<%= entityInstance %>PopupService
+                    .open(<%= entityAngularJSName %>DialogComponent);
+            }
+
+        });
+    }
+
+    ngOnDestroy() {
+        this.routeSub.unsubscribe();
+    }
 }
